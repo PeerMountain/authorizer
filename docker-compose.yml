@@ -1,0 +1,30 @@
+version: "3.4"
+
+services:
+  authorizer:
+    build:
+      context: ./authorizer
+      target: '${TARGET:-production}'
+    image: 'peer-mountain01:5005/teleferic-mvp/authorizer:${TAG:-latest}'
+    environment:
+      - HBASE_HOSTNAME=localhost
+      - HBASE_PORT=9090
+      - BROKER_URL=rabbitmq-proxy
+    networks:
+      - authorizer
+      - rabbitmq
+
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+      restart_policy:
+        condition: "on-failure"
+
+networks:
+  authorizer:
+    external: true
+  rabbitmq:
+    external: true
