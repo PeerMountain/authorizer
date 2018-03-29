@@ -9,10 +9,9 @@ before_script:
 test:
   script:
     - export TAG="${CI_BUILD_REF_NAME}"
-    - export TARGET="development"
-    - docker-compose -f docker-compose.yml build
-    - docker-compose -f docker-compose.yml run authorizer pytest tests/authorizer_test_parameters.py
-  stage: build_image
+    - docker-compose -f docker-compose-test.yml build
+    - docker-compose -f docker-compose-test.yml --rm run authorizer-test pytest tests/authorizer_test_parameters.py
+  stage: test
   tags:
     - shell
     - pm01
