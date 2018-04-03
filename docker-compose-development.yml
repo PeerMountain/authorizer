@@ -1,0 +1,30 @@
+version: "3.4"
+
+services:
+  authorizer:
+    build:
+      context: ./authorizer
+      target: development
+    image: 'authorizer:${TAG:-latest}'
+    environment:
+      - HBASE_HOSTNAME=hbase
+      - HBASE_PORT=9090
+      - BROKER_URL=rabbitmq
+    volumes:
+      - ./authorizer:/usr/src/app/
+
+  hbase:
+    image: 'jonatasbaldin/hbase-standalone'
+    ports:
+      - '8080:8080'
+      - '8085:8085'
+      - '9090:9090'
+      - '16010:16010'
+      - '16020:16020'
+      - '16030:16030'
+
+  rabbitmq:
+    image: 'rabbitmq:3.7-management-alpine'
+    ports:
+      - 15672:15672
+      - 5672:5672
