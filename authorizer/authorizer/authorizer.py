@@ -136,10 +136,10 @@ def validate_message_registration(message: str):
 
         # Parse message
         message_content = msgpack.unpackb(message_content_raw)
-        if message_content.get(b'bodyType') == BodyTypes.Registration.REGISTRATION:
+        if message_content[b'bodyType'] == BodyTypes.Registration.REGISTRATION:
             message_body = msgpack.unpackb(
-                base64.b64decode(message_content.get(b'messageBody')))
-            sender_pubkey = message_body.get(b'publicKey').decode()
+                base64.b64decode(message_content[b'messageBody']))
+            sender_pubkey = message_body[b'publicKey'].decode()
             logger.debug("Successfully retrieved user pubkey from message")
     except Exception:
         raise ValidationError(

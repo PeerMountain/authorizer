@@ -4,6 +4,7 @@ import base64
 from typing import Union
 
 from Cryptodome.Cipher import AES as Base_AES
+from Cryptodome.Util.Padding import pad
 
 
 logger = logging.getLogger(__name__)
@@ -28,8 +29,12 @@ class AES:
             nonce if nonce
             else bytes(random.randint(1, 255) for _ in range(16))
         )
-        self.key = key
-        self.cipher = Base_AES.new(key, Base_AES.MODE_GCM, nonce=self.nonce)
+        self.key = self._pad(key)
+        self.cipher = Base_AES.new(
+            self.key,
+            Base_AES.MODE_GCM,
+            nonce=self.nonce
+        )
 
     def decrypt(self, ciphertext: bytes, tag: Union[bytes, None]=None) -> bytes:  # NOQA
         """decrypt
@@ -68,3 +73,28 @@ class AES:
         """
         ciphertext, _ = self.cipher.encrypt_and_digest(data)
         return base64.b64encode(ciphertext)
+
+    def _pad(self, key: bytes) -> bytes:
+        """_pad
+
+        Pad a key to the required length for use with the Cryptodome module.
+
+        :param key: Key to be padded.
+        :type key: bytes
+        :rtype: bytes
+        """
+        if len(key) in (16, 24, 32):
+            return key
+        pad_length = None
+        if len(key) < 16:
+            pad_length = 16
+        elif len(key) < 24:
+            pad_length = 24
+        elif len(key) < 32:
+            pad_length = 32
+        else:
+            raise ValueError(
+                "Key length must be less than 32 bytes. "
+                f"Got {len(key)} bytes instead."
+            )
+        return pad(key, pad_length)

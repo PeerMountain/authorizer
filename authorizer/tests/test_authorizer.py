@@ -66,10 +66,6 @@ def test_verify_registration_message_data(message_body, mocker):
         lambda x: INVITE_MESSAGE_EXAMPLE
     )
     mocker.patch(
-        'authorizer.authorizer.authorizer.Writer.add_persona',
-        lambda *args, **kwargs: None
-    )
-    mocker.patch(
         'authorizer.authorizer.authorizer.Reader.persona_exists',
         lambda x, y: False
     )
