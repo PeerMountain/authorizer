@@ -37,7 +37,7 @@ SIGNATURES = [
 
 
 REGISTRATION_MESSAGES = [
-    AES(PUBLIC_AES_KEY).encrypt(
+    base64.b64encode(
         msgpack.packb({
             'bodyType': 1,
             'messageBody': base64.b64encode(msgpack.packb({
@@ -46,19 +46,7 @@ REGISTRATION_MESSAGES = [
         })
     ),
     pytest.param(
-        AES(PUBLIC_AES_KEY + b"IncorrectKey").encrypt(
-            msgpack.packb({
-                'bodyType': 1,
-                'messageBody': base64.b64encode(msgpack.packb({
-                    'publicKey': "boguspubkey"
-                }))
-            })
-        ),
-        marks=pytest.mark.xfail(strict=True),
-        id='registration_incorrectAESkey'
-    ),
-    pytest.param(
-        AES(PUBLIC_AES_KEY).encrypt(
+        base64.b64encode(
             msgpack.packb({
                 "data": "this message is malformed"
             })
@@ -77,22 +65,22 @@ ACCESS_CONTROL_LISTS = [
 
 PUBLIC_MESSAGE_ENVELOPES = [
     {
-        'message': base64.b64encode(AES(PUBLIC_AES_KEY).encrypt(msgpack.packb({
+        'message': base64.b64encode(msgpack.packb({
             'messageBody': {
                 'bodyType': 1
             },
-            'dossierSalt': b'\xbd\x02\xbf;\xb5\x16\x97\xdft\x84\xb3\xa6\xba\xf1\xb1\x9b\xbbl\x8e\xde\xd6s\xb5\xd0\x16\xdbJ\\\xa4\xd3\xa2\x15\xd5\x0c\x9d\x9c\xd8\xfd"='
-        }))),
-        'dossierHash': 'ACCczBiooZH2EpSNbKWO5ez0XLhUbAgypMMMGpvY1Hk=',
+            'dossierSalt': base64.b64encode(b'\xbd\x02\xbf;\xb5\x16\x97\xdft\x84\xb3\xa6\xba\xf1\xb1\x9b\xbbl\x8e\xde\xd6s\xb5\xd0\x16\xdbJ\\\xa4\xd3\xa2\x15\xd5\x0c\x9d\x9c\xd8\xfd"=')
+        })),
+        'dossierHash': b'n5jrh3gy+A6HP7+bhartYPLZ0PKuiZI0uVcdfZcrOqs=',
         'bodyHash': '3XbGm+lGWHfvp/R/RPDP8SO+xw3AYx34U+kBk2f1m2Q=',
     },
     pytest.param({
-        'message': base64.b64encode(AES(PUBLIC_AES_KEY).encrypt(msgpack.packb({
+        'message': base64.b64encode(msgpack.packb({
             'messageBody': msgpack.packb({
                 'bodyType': 1
             }),
-            'dossierSalt': b'\xbd\x02\xbf;\xb5\x16\x97\xdft\x84\xb3\xa6\xba\xf1\xb1\x9b\xbbl\x8e\xde\xd6s\xb5\xd0\x16\xdbJ\\\xa4\xd3\xa2\x15\xd5\x0c\x9d\x9c\xd8\xfd"='
-        }))),
+            'dossierSalt': base64.b64encode(b'\xbd\x02\xbf;\xb5\x16\x97\xdft\x84\xb3\xa6\xba\xf1\xb1\x9b\xbbl\x8e\xde\xd6s\xb5\xd0\x16\xdbJ\\\xa4\xd3\xa2\x15\xd5\x0c\x9d\x9c\xd8\xfd"=')
+        })),
         'dossierHash': 'INCORRECTDOSSIERHASH==',
         'bodyHash': '3XbGm+lGWHfvp/R/RPDP8SO+INCORRECTHASH+kBk2f1m2Q=',
     }, marks=pytest.mark.xfail(strict=True), id='publicMessage_hashMismatch')
@@ -142,9 +130,9 @@ INVITE_AES_KEY = b'asdfzxcv'
 
 
 INVITE_MESSAGE_EXAMPLE = {
-    'message': AES(PUBLIC_AES_KEY).encrypt(msgpack.packb({
+    'message': base64.b64encode(msgpack.packb({
         'messageBody': base64.b64encode(msgpack.packb({
-            'inviteName': AES(INVITE_AES_KEY).encrypt(b"invite name")
+            'inviteName': AES(INVITE_AES_KEY, b'0123').encrypt(b"invite name")
         }))
     }))
 }
@@ -154,7 +142,12 @@ REGISTRATION_MESSAGE_BODIES = [
     {
         b'inviteMsgID': b'messageID',
         b'publicNickname': b'fulano',
-        b'keyProof': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(INVITE_AES_KEY),
+        b'keyProof': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(
+            msgpack.packb({
+                'key': INVITE_AES_KEY,
+                'nonce': b'0123'
+            })
+        ),
         b'inviteName': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(b"invite name"),
         b'publicKey': b"""-----BEGIN PUBLIC KEY-----
         MCQwDQYJKoZIhvcNAQEBBQADEwAwEAIJALn94I4UDcVNAgMBAAE=
