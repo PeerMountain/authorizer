@@ -41,7 +41,7 @@ def test_validate_access_control_list(ACL, mocker):
         else:
             raise Exception()
     mocker.patch(
-        'authorizer.authorizer.authorizer.Reader.get_persona',
+        'authorizer.authorizer.Reader.get_persona',
         mock_get_persona
     )
     authorizer.validate_access_control_list(ACL)
@@ -49,8 +49,8 @@ def test_validate_access_control_list(ACL, mocker):
 
 @pytest.mark.parametrize("envelope", PUBLIC_MESSAGE_ENVELOPES)
 def test_validate_public_message(envelope, mocker):
-    mocker.patch('authorizer.authorizer.authorizer.validate_invite', lambda *args, **kwargs: None)
-    mocker.patch('authorizer.authorizer.authorizer.validate_registration', lambda *args, **kwargs: None)
+    mocker.patch('authorizer.authorizer.validate_invite', lambda *args, **kwargs: None)
+    mocker.patch('authorizer.authorizer.validate_registration', lambda *args, **kwargs: None)
     authorizer.validate_public_message(envelope)
 
 
@@ -62,11 +62,11 @@ def test_validate_invite_message(message_body):
 @pytest.mark.parametrize("message_body", REGISTRATION_MESSAGE_BODIES)
 def test_verify_registration_message_data(message_body, mocker):
     mocker.patch(
-        'authorizer.authorizer.authorizer.Reader.get_message',
+        'authorizer.authorizer.Reader.get_message',
         lambda x: INVITE_MESSAGE_EXAMPLE
     )
     mocker.patch(
-        'authorizer.authorizer.authorizer.Reader.persona_exists',
+        'authorizer.authorizer.Reader.persona_exists',
         lambda x, y: False
     )
     authorizer.validate_registration(message_body)
