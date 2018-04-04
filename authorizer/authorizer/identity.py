@@ -3,7 +3,7 @@ import os
 
 from collections import OrderedDict
 
-from ..libs import Identity
+from libs import Identity
 
 KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__name__)), 'authorizer', 'keys')
 
