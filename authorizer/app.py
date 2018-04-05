@@ -2,6 +2,7 @@ import base64
 import datetime
 import json
 import logging
+import logging.config
 
 import msgpack
 from apistar import Include, Route, http, typesystem
@@ -15,8 +16,8 @@ from mock import reader
 import settings
 
 
-settings.configure_logging()
-logger = logging.getLogger(__name__)
+logging.config.fileConfig('logging_config.cfg', disable_existing_loggers=False)
+logger = logging.getLogger('root')
 
 
 class Date(typesystem.String):
@@ -68,7 +69,7 @@ def teleferic() -> dict:
 
 
 def messages(message_hash: str=None, date: Date=None, reader_address: str=None):
-    logger.debug("Received message query")
+    logger.info("Received message query")
     if message_hash:
         try:
             return reader.get_message(message_hash)
