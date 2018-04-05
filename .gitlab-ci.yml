@@ -46,7 +46,7 @@ push_image:
 deploy:
   script:
     - export TAG="${CI_BUILD_REF_NAME}"
-    - docker stack deploy -c docker-compose.yml authorizer
+    - docker stack deploy -c docker-compose.yml --with-registry-auth authorizer
   stage: deploy
   tags:
     - shell
