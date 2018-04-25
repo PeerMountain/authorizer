@@ -2,7 +2,6 @@ import base64
 from collections import OrderedDict
 
 import base58
-import msgpack
 from Cryptodome import Random
 from Cryptodome.Hash import RIPEMD, SHA256
 from Cryptodome.PublicKey import RSA as Key
