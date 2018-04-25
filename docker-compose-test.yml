@@ -7,6 +7,9 @@ services:
       target: development
     image: 'peer-mountain01:5005/teleferic-mvp/authorizer/test:${TAG:-latest}'
     environment:
-      - HBASE_HOSTNAME=localhost
-      - HBASE_PORT=9090
+      - ENVIRONMENT=TEST
       - BROKER_URL=rabbitmq-proxy
+      - READER_HOSTNAME=reader
+      - READER_PORT=8000
+    volumes:
+      - ./authorizer:/usr/src/app/

@@ -1,4 +1,4 @@
-version: "3.4"
+version: '3.4'
 
 services:
   authorizer:
@@ -7,8 +7,9 @@ services:
       target: production
     image: 'peer-mountain01:5005/teleferic-mvp/authorizer:${TAG:-latest}'
     environment:
-      - HBASE_HOSTNAME=localhost
-      - HBASE_PORT=9090
+      - ENVIRONMENT=PRODUCTION
+      - READER_HOSTNAME=reader
+      - READER_PORT=8000
       - BROKER_URL=rabbitmq-proxy
     networks:
       - authorizer
@@ -18,10 +19,10 @@ services:
       replicas: 2
       resources:
         limits:
-          cpus: "0.2"
+          cpus: '0.2'
           memory: 256M
       restart_policy:
-        condition: "on-failure"
+        condition: 'on-failure'
 
 networks:
   authorizer:

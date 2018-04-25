@@ -1,19 +1,17 @@
 import base64
-import datetime
-import json
 import logging
 import logging.config
 
-import msgpack
+from umsgpack import packb
 from apistar import Include, Route, http, typesystem
 from apistar.frameworks.wsgi import WSGIApp as App
 from apistar.handlers import docs_urls, static_urls
 
-from authorizer import authorizer, ValidationError
+from authorizer.authorizer import authorize_message
+from authorizer.exceptions import ValidationError
 from authorizer.identity import TelefericIdentity, sign_current_timestamp
 from authorizer.producer import send_message_to_writer
-from mock import reader
-import settings
+from reader.reader import reader
 
 
 logging.config.fileConfig('logging_config.cfg', disable_existing_loggers=False)
@@ -25,12 +23,17 @@ class Date(typesystem.String):
 
 
 def send_message(data: http.RequestData) -> http.Response:
-    logger.debug("Received new message.")
-    envelope = data['envelope']
+    """
+
+    """
+
+    envelope = data.get('envelope')
+    message_hash = envelope.get('messageHash')
+
     try:
-        authorizer.authorize_message(envelope)
+        authorize_message(envelope)
         send_message_to_writer(envelope)
-        logger.info("Database insert queued.")
+        logger.info(f'Message {message_hash} sent to Writer queue')
     except ValidationError as exc:
         logger.error(exc.message)
         return http.Response(
@@ -45,47 +48,76 @@ def send_message(data: http.RequestData) -> http.Response:
 
 
 def persona(address: str=None, pubkey: str=None, nickname: str=None) -> dict:
-    logger.info(f"Persona lookup, address {address} //  nickname {nickname}")
-    try:
-        return reader.get_persona(address, nickname, pubkey)
-    except reader.NotFound:
+    """
+
+    """
+
+    if address:
+        logger.info(f'Persona lookup address {address}')
+        response = reader.persona(address=address)
+    elif pubkey:
+        response = reader.persona(pubkey=pubkey)
+        logger.info(f'Persona lookup pubkey {pubkey}')
+    elif nickname:
+        response = reader.persona(nickname=nickname)
+        logger.info(f'Persona lookup nickname {nickname}')
+
+    if not response.get('response') and response.get('status') == 404:
         return http.Response(
-            content={'error': 'Persona not found.'},
-            status=404
+            content={'error': exc.message},
+            status=404,
         )
+
+    return response.get('response')
 
 
 def teleferic() -> dict:
-    return {
+    """
+
+    """
+
+    response =  {
         'persona': {
-            'address': TelefericIdentity.address,
+            'address': TelefericIdentity.address.decode(),
             'pubkey': base64.b64encode(TelefericIdentity.pubkey).decode(),
             'nickname': 'Teleferic'
         },
         'signedTimestamp': base64.b64encode(
-            msgpack.packb(sign_current_timestamp())
+            packb(sign_current_timestamp())
         ).decode()
     }
 
+    return response
+
 
 def messages(message_hash: str=None, date: Date=None, reader_address: str=None):
-    logger.info("Received message query")
+    """
+
+    """
+
+    if not message_hash and not date and not reader_address:
+        return http.Response(
+            content={'error': 'You must specify at least one filter'},
+            status=400
+        )
+
     if message_hash:
-        try:
-            return reader.get_message(message_hash)
-        except reader.NotFound as exc:
-            return http.Response(
-                content={'error': exc.message},
-                status=404
-            )
+        logger.info(f'Message lookup hash {message_hash}')
+        response = reader.message(hash=message_hash)
     elif date:
-        return reader.get_messages(message_date=date)
+        logger.info(f'Message lookup date {date}')
+        response = reader.message(created_at=date)
     elif reader_address:
-        return reader.get_messages(message_reader=reader_address)
-    return http.Response(
-        content={'error': 'You must specify at least one filter'},
-        status=400
-    )
+        logger.info(f'Message lookup reader_address {reader_address}')
+        response = reader.message(persona_sender=reader_address)
+
+    if not response.get('response') and response.get('status') == 404:
+        return http.Response(
+            content={'error': exc.message},
+            status=404,
+        )
+
+    return response.get('response')
 
 
 routes = [

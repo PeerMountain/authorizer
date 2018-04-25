@@ -1,16 +1,10 @@
-import base64
-import logging
-
 from kombu import Connection
-from msgpack import packb
+from umsgpack import packb
 
 from .queues import writer_exchange, writer_queue
-from .settings import BROKER_URL
-from libs import Identity
+from settings import BROKER_URL
 
 
-# gets instanciated every time this module is loaded
-# which hopefully is enough for the connection not to die
 BROKER_CONNECTION = Connection(BROKER_URL)
 
 
@@ -20,8 +14,9 @@ def send_message_to_writer(envelope: dict):
     :param envelope: Envelope as received by Authorizer from the user.
     :type envelope: dict
     """
+
     message = packb(envelope)
-    producer = BROKER_CONNECTION.Producer(serializer='msgpack')
+    producer = BROKER_CONNECTION.Producer()
     producer.publish(
         message,
         exchange=writer_exchange,

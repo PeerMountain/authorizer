@@ -2,7 +2,7 @@ import base64
 import pytest
 from freezegun import freeze_time
 
-from ..authorizer import authorizer, validators
+from authorizer import authorizer, validators
 from .fixtures import (
     sender_pubkey
 )
@@ -41,7 +41,7 @@ def test_validate_access_control_list(ACL, mocker):
         else:
             raise Exception()
     mocker.patch(
-        'authorizer.authorizer.Reader.get_persona',
+        'authorizer.authorizer.reader.persona',
         mock_get_persona
     )
     authorizer.validate_access_control_list(ACL)
@@ -62,11 +62,14 @@ def test_validate_invite_message(message_body):
 @pytest.mark.parametrize("message_body", REGISTRATION_MESSAGE_BODIES)
 def test_verify_registration_message_data(message_body, mocker):
     mocker.patch(
-        'authorizer.authorizer.Reader.get_message',
-        lambda x: INVITE_MESSAGE_EXAMPLE
+        'authorizer.authorizer.reader.message',
+        lambda hash: {'response': INVITE_MESSAGE_EXAMPLE, 'status': 200}
     )
     mocker.patch(
-        'authorizer.authorizer.Reader.persona_exists',
-        lambda x, y: False
+        'authorizer.authorizer.reader.persona',
+        lambda pubkey: {
+            'response': REGISTRATION_MESSAGE_BODIES[0].get('publicKey'),
+            'status': 200
+        }
     )
     authorizer.validate_registration(message_body)
