@@ -10,3 +10,7 @@ services:
       - HBASE_HOSTNAME=localhost
       - HBASE_PORT=9090
       - BROKER_URL=rabbitmq-proxy
+      - READER_HOSTNAME=reader
+      - READER_PORT=8000
+    volumes:
+      - ./authorizer:/usr/src/app/
