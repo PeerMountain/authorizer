@@ -1,11 +1,11 @@
 import pytest
 import base64
-import msgpack
+import umsgpack
+import msgpack  # still used in some edge cases
 
-from ..authorizer import identity
-from ..authorizer.constants import PUBLIC_AES_KEY
-from ..libs.AES import AES
-from ..libs.RSA import RSA
+from authorizer import identity
+from libs.AES import AES
+from libs.RSA import RSA
 
 EXPECTED_HASHES = [ ("qwertyuiop", b'\x9a\x90\x04\x03\xac1;\xa2z\x1b\xc8\x1f\t2e+\x80 \xda\xc9,#M\x98\xfa\x0b\x06\xbf\x00@\xec\xfd'),
     ("asdfghjkl", b'\\\x80V]\xb6\xf2\x9d\xa0\xb0\x1a\xa1%"\xc3{2\xf1!\xcb\xe4z\x86\x1e\xf7\xf0\x06\xcb"\x92-\xff\xa1'),
@@ -38,16 +38,16 @@ SIGNATURES = [
 
 REGISTRATION_MESSAGES = [
     base64.b64encode(
-        msgpack.packb({
+        umsgpack.packb({
             'bodyType': 1,
-            'messageBody': base64.b64encode(msgpack.packb({
+            'messageBody': base64.b64encode(umsgpack.packb({
                 'publicKey': "boguspubkey"
             }))
         })
     ),
     pytest.param(
         base64.b64encode(
-            msgpack.packb({
+            umsgpack.packb({
                 "data": "this message is malformed"
             })
         ),
@@ -88,12 +88,12 @@ PUBLIC_MESSAGE_ENVELOPES = [
 
 INVITE_MESSAGE_BODIES = [
     {
-        b'bootstrapNode': 'localhost:5000',
-        b'bootstrapAddr': 'idk what this is',
-        b'offeringAddr': 'address of the sender ( a bank )',
-        b'serviceAnnouncementMessage': 'idk what this is for',
-        b'serviceOfferingID': 'ID for field above',
-        b'inviteName': 'name of the invite'
+        'bootstrapNode': 'localhost:5000',
+        'bootstrapAddr': 'idk what this is',
+        'offeringAddr': 'address of the sender ( a bank )',
+        'serviceAnnouncementMessage': 'idk what this is for',
+        'serviceOfferingID': 'ID for field above',
+        'inviteName': 'name of the invite'
     },
     pytest.param({
         b'a': 'b'
@@ -130,8 +130,8 @@ INVITE_AES_KEY = b'asdfzxcv'
 
 
 INVITE_MESSAGE_EXAMPLE = {
-    'message': base64.b64encode(msgpack.packb({
-        'messageBody': base64.b64encode(msgpack.packb({
+    'message': base64.b64encode(umsgpack.packb({
+        'messageBody': base64.b64encode(umsgpack.packb({
             'inviteName': AES(INVITE_AES_KEY, b'0123').encrypt(b"invite name")
         }))
     }))
@@ -140,16 +140,16 @@ INVITE_MESSAGE_EXAMPLE = {
 
 REGISTRATION_MESSAGE_BODIES = [
     {
-        b'inviteMsgID': b'messageID',
-        b'publicNickname': b'fulano',
-        b'keyProof': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(
-            msgpack.packb({
-                'key': INVITE_AES_KEY,
-                'nonce': b'0123'
+        'inviteMsgID': 'messageID',
+        'publicNickname': 'fulano',
+        'keyProof': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(
+            umsgpack.packb({
+                'key': 'asdfzxcv',
+                'nonce': '0123'
             })
         ),
-        b'inviteName': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(b"invite name"),
-        b'publicKey': b"""-----BEGIN PUBLIC KEY-----
+        'inviteName': RSA(identity.TELEFERIC_PUBLIC_KEY).encrypt(b"invite name"),
+        'publicKey': b"""-----BEGIN PUBLIC KEY-----
         MCQwDQYJKoZIhvcNAQEBBQADEwAwEAIJALn94I4UDcVNAgMBAAE=
         -----END PUBLIC KEY-----
         """, # 64 bits rsa just for testing
