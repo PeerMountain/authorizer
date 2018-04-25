@@ -57,28 +57,19 @@ def validate_objects(sender_pubkey, objects=[]):
 
     Validates all the objects received with a message
 
-    Stub function
-
     :param sender_pubkey: User's public key
     :param objects: Object list
     """
-    # FIXME validate all objects.
-    # FIXME integrate in message validation.
+    # For each container
     for _object in objects:
-        object_hash = _object.get('objectHash')
-        objectContainer = _object.get('objectContainer')
 
-        if not objectContainer is None:
-            container_object = _object.get('objectContainer')
-            container_hash = _object.get('containerHash')
-            verify_sha256(
-                _object.get('objectContainer'),
-                _object.get('containerHash')
-            )
+        # if objectContainer be present
+        container = _object.get('objectContainer')
+        container_hash = _object.get('objectHash')
+        if container:
+            # Validate container hash
+            verify_sha256(container, container_hash)
 
             # Validate container signature
             validate_timestamped_signature(
-                sender_pubkey,
-                container_hash,
-                _object.get('containerSig')
-            )
+                sender_pubkey, container_hash, _object.get('containerSig'))
