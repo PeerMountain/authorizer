@@ -29,3 +29,5 @@ networks:
     external: true
   rabbitmq:
     external: true
+  reader:
+    external: true
