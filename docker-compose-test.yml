@@ -11,5 +11,3 @@ services:
       - BROKER_URL=rabbitmq-proxy
       - READER_HOSTNAME=reader
       - READER_PORT=8000
-    volumes:
-      - ./authorizer:/usr/src/app/
