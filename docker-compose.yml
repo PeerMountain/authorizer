@@ -14,6 +14,7 @@ services:
     networks:
       - authorizer
       - rabbitmq
+      - reader
 
     deploy:
       replicas: 2
